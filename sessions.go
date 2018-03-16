@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"regexp"
 
@@ -47,35 +46,33 @@ func SessionColumns() []table.ColumnDefinition {
 // SessionsGenerate will be called whenever the table is queried. It should return
 // a full table scan.
 func SessionsGenerate(ctx context.Context, queryContext table.QueryContext) ([]map[string]string, error) {
-	log.Println("----------")
-	log.Println(queryContext)
 	SessionRE := myRegexp{regexp.MustCompile(`(?P<id>\w+): proto=(?P<proto>\S+) src=(?P<src>\S+) fe=(?P<fe>\S+) be=(?P<be>\S+) srv=(?P<srv>\S+) ts=(?P<ts>\S+) age=(?P<age>\S+) calls=(?P<calls>\S+) rq\[f=(?P<rq_f>[^,]+),i=(?P<rq_i>[^,]*),an=(?P<rq_an>[^,]*),rx=(?P<rq_rx>[^,]*),wx=(?P<rq_wx>[^,]*),ax=(?P<rq_ax>[^\]]*)] rp\[f=(?P<rp_f>[^,]+),i=(?P<rp_I>[^,]*),an=(?P<rp_an>[^,]*),rx=(?P<rp_rx>[^,]*),wx=(?P<rp_wx>[^,]*),ax=(?P<rp_ax>[^\]]*)] .*exp=(?P<exp>\S*)`)}
-	if addrList, ok := queryContext.Constraints["addr"]; ok {
-		log.Println(addrList)
-		results := []map[string]string{}
 
-		for _, a := range addrList.Constraints {
-			log.Println(a.Expression)
-			client := &haproxy.HAProxyClient{Addr: a.Expression}
-			data, err := client.RunCommand("show sess")
-			log.Println(err)
-			if err != nil {
-				return results, err
-			}
-			log.Println(data.String())
-			scanner := bufio.NewScanner(data)
-			for scanner.Scan() {
-				aline := scanner.Text()
-				if aline != "" {
-					m := SessionRE.FindStringSubmatchMap(aline)
-					m["addr"] = a.Expression
-					fmt.Println(m)
+	results := []map[string]string{}
 
-					results = append(results, m)
-				}
+	addrList, err := ListAddresses(queryContext)
+	if err != nil {
+		log.Println("ListAddresses return error: ", err)
+		return results, err
+	}
+	for _, a := range addrList {
+		client := &haproxy.HAProxyClient{Addr: a}
+		data, err := client.RunCommand("show sess")
+		if err != nil {
+			log.Println("Haproxy Client RunCommand error show sess: ", err)
+			return results, err
+		}
+		scanner := bufio.NewScanner(data)
+		for scanner.Scan() {
+			aline := scanner.Text()
+			if aline != "" {
+				m := SessionRE.FindStringSubmatchMap(aline)
+				m["addr"] = a
+
+				results = append(results, m)
 			}
 		}
 		return results, nil
 	}
-	return []map[string]string{}, errors.New("addr is required in WHERE to identify which sock to speak with")
+	return results, errors.New("addr is required in WHERE to identify which sock to speak with")
 }

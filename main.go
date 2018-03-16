@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"log"
 	"os"
 	"regexp"
@@ -33,6 +34,17 @@ func (r *myRegexp) FindStringSubmatchMap(s string) map[string]string {
 
 	}
 	return captures
+}
+
+func ListAddresses(queryContext table.QueryContext) ([]string, error) {
+	results := []string{}
+	if addrList, ok := queryContext.Constraints["addr"]; ok {
+		for _, a := range addrList.Constraints {
+			results = append(results, a.Expression)
+		}
+		return results, nil
+	}
+	return results, errors.New("Constraints does not have addr")
 }
 
 // thread_id: 0
