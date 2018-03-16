@@ -14,6 +14,15 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/alexflint/go-restructure"
+  packages = [
+    ".",
+    "regex"
+  ]
+  revision = "a509d071de2811703b877e94d7c91e27fb8c5086"
+
+[[projects]]
+  branch = "master"
   name = "github.com/bcicen/go-haproxy"
   packages = [
     ".",
@@ -26,6 +35,12 @@
   name = "github.com/gocarina/gocsv"
   packages = ["."]
   revision = "133f96a03fdec5dbf18306e073d10ef649df59e5"
+
+[[projects]]
+  name = "github.com/jessevdk/go-flags"
+  packages = ["."]
+  revision = "96dc06278ce32a0e9d957d590bb987c81ee66407"
+  version = "v1.3.0"
 
 [[projects]]
   branch = "master"
@@ -45,14 +60,29 @@
   version = "v0.8.0"
 
 [[projects]]
+  name = "github.com/sirupsen/logrus"
+  packages = ["."]
+  revision = "c155da19408a8799da419ed3eeb0cb5db0ad5dbc"
+  version = "v1.0.5"
+
+[[projects]]
+  branch = "master"
+  name = "golang.org/x/crypto"
+  packages = ["ssh/terminal"]
+  revision = "b4956d363a8b14623cc81db401707679605930a3"
+
+[[projects]]
   branch = "master"
   name = "golang.org/x/sys"
-  packages = ["windows"]
+  packages = [
+    "unix",
+    "windows"
+  ]
   revision = "89ac7f292d17a339edab4de8efcba5d8672ff661"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "1b4f6c303f6effca456bc2c7194f21715f2a31c2cb992817463c4161ce4d74b5"
+  inputs-digest = "508801e23f7b1d7ce3a446b45ba86e2e9f36b444cfb4ddddf132760a782e0724"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -15,7 +15,7 @@ import (
 // Example:
 // 0x7fc4ca6009f0: proto=unix_stream src=unix:1 fe=GLOBAL be=<NONE> srv=<none> ts=02 age=18s calls=1 rq[f=40c08202h,i=0,an=00h,rx=,wx=,ax=] rp[f=c0048202h,i=0,an=00h,rx=,wx=,ax=] s0=[7,ch,fd=7,ex=] s1=[7,4018h,fd=-1,ex=] exp=1m42s
 // 0x7fc4ca7012d0: proto=tcpv4 src=127.0.0.1:49765 fe=psql be=psql srv=cockroach1 ts=08 age=8s calls=3 rq[f=40848202h,i=0,an=00h,rx=52s,wx=,ax=] rp[f=c0048202h,i=0,an=00h,rx=52s,wx=,ax=] s0=[7,8h,fd=8,ex=] s1=[7,18h,fd=9,ex=] exp=2s
-func SessionColumns() []table.ColumnDefinition {
+func SessionsColumns() []table.ColumnDefinition {
 	return []table.ColumnDefinition{
 		table.TextColumn("addr"),
 		table.TextColumn("id"),
