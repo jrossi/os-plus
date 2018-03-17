@@ -11,25 +11,6 @@ import (
 	"github.com/kolide/osquery-go/plugin/table"
 )
 
-// thread_id: 0
-// date_now: 1521155474.723564
-// loops: 1159
-// wake_cache: 487
-// wake_tasks: 163
-// wake_applets: 3
-// wake_signal: 0
-// poll_exp: 653
-// poll_drop: 157
-// poll_dead: 0
-// poll_skip: 0
-// fd_skip: 0
-// fd_lock: 0
-// fd_del: 4
-// conn_dead: 0
-// stream: 10
-// empty_rq: 841
-// long_rq: 0
-
 func ActivityColumns() []table.ColumnDefinition {
 	return []table.ColumnDefinition{
 		table.TextColumn("addr"),
@@ -53,57 +34,6 @@ func ActivityColumns() []table.ColumnDefinition {
 		table.IntegerColumn("long_rq"),
 	}
 }
-
-// Name: HAProxy
-// Version: 1.8.4-1deb90d
-// Release_date: 2018/02/08
-// node: war-machines.local
-// Uptime: 0d 0h54m34s
-// Nbproc: 1
-// Process_num: 1
-// Pid: 55112
-// Uptime_sec: 3274
-// Memmax_MB: 0
-// PoolAlloc_MB: 0
-// PoolUsed_MB: 0
-// PoolFailed: 0
-// Ulimit-n: 8225
-// Maxsock: 8225
-// Maxconn: 4096
-// Hard_maxconn: 4096
-// CurrConns: 0
-// CumConns: 32
-// CumReq: 32
-// MaxSslConns: 0
-// CurrSslConns: 0
-// CumSslConns: 0
-// Maxpipes: 0
-// PipesUsed: 0
-// PipesFree: 0
-// ConnRate: 0
-// ConnRateLimit: 0
-// MaxConnRate: 0
-// SessRate: 0
-// SessRateLimit: 0
-// MaxSessRate: 0
-// SslRate: 0
-// SslRateLimit: 0
-// MaxSslRate: 0
-// SslFrontendKeyRate: 0
-// SslFrontendMaxKeyRate: 0
-// SslFrontendSessionReuse_pct: 0
-// SslBackendKeyRate: 0
-// SslBackendMaxKeyRate: 0
-// SslCacheLookups: 0
-// SslCacheMisses: 0
-// CompressBpsIn: 0
-// CompressBpsOut: 0
-// CompressBpsRateLim: 0
-// ZlibMemUsage: 0
-// MaxZlibMemUsage: 0
-// Tasks: 6
-// Run_queue: 0
-// Idle_pct: 100
 
 func InfoColumns() []table.ColumnDefinition {
 	return []table.ColumnDefinition{
@@ -162,9 +92,14 @@ func InfoColumns() []table.ColumnDefinition {
 	}
 }
 
+func init() {
+	Plugins["haproxy_activity"] = table.NewPlugin("haproxy_activity", ActivityColumns(), KVGenerate("show activity"))
+	Plugins["haproxy_info"] = table.NewPlugin("haproxy_info", InfoColumns(), KVGenerate("show info"))
+}
+
 func KVGenerate(cmd string) table.GenerateFunc {
 
-	x := func(ctx context.Context, queryContext table.QueryContext) ([]map[string]string, error) {
+	return func(ctx context.Context, queryContext table.QueryContext) ([]map[string]string, error) {
 
 		results := []map[string]string{}
 
@@ -197,6 +132,5 @@ func KVGenerate(cmd string) table.GenerateFunc {
 		}
 		return results, errors.New("addr is required in WHERE to identify which sock to speak with")
 	}
-	return x
 
 }

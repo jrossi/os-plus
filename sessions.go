@@ -43,36 +43,62 @@ func SessionsColumns() []table.ColumnDefinition {
 	}
 }
 
-// SessionsGenerate will be called whenever the table is queried. It should return
-// a full table scan.
-func SessionsGenerate(ctx context.Context, queryContext table.QueryContext) ([]map[string]string, error) {
-	SessionRE := myRegexp{regexp.MustCompile(`(?P<id>\w+): proto=(?P<proto>\S+) src=(?P<src>\S+) fe=(?P<fe>\S+) be=(?P<be>\S+) srv=(?P<srv>\S+) ts=(?P<ts>\S+) age=(?P<age>\S+) calls=(?P<calls>\S+) rq\[f=(?P<rq_f>[^,]+),i=(?P<rq_i>[^,]*),an=(?P<rq_an>[^,]*),rx=(?P<rq_rx>[^,]*),wx=(?P<rq_wx>[^,]*),ax=(?P<rq_ax>[^\]]*)] rp\[f=(?P<rp_f>[^,]+),i=(?P<rp_I>[^,]*),an=(?P<rp_an>[^,]*),rx=(?P<rp_rx>[^,]*),wx=(?P<rp_wx>[^,]*),ax=(?P<rp_ax>[^\]]*)] .*exp=(?P<exp>\S*)`)}
-
-	results := []map[string]string{}
-
-	addrList, err := ListAddresses(queryContext)
-	if err != nil {
-		log.Println("ListAddresses return error: ", err)
-		return results, err
+func PoolsColumns() []table.ColumnDefinition {
+	return []table.ColumnDefinition{
+		table.TextColumn("addr"),
+		table.TextColumn("name"),
+		table.IntegerColumn("size"),
+		table.IntegerColumn("allocated"),
+		table.IntegerColumn("allocated_size"),
+		table.IntegerColumn("used"),
+		table.IntegerColumn("failures"),
+		table.IntegerColumn("users"),
+		table.TextColumn("shared"),
 	}
-	for _, a := range addrList {
-		client := &haproxy.HAProxyClient{Addr: a}
-		data, err := client.RunCommand("show sess")
+}
+func init() {
+	Plugins["haproxy_sessions"] = table.NewPlugin("haproxy_sessions", SessionsColumns(), RegexGenerate(
+		"show sess",
+		&myRegexp{22, regexp.MustCompile(`(?P<id>\w+): proto=(?P<proto>\S+) src=(?P<src>\S+) fe=(?P<fe>\S+) be=(?P<be>\S+) srv=(?P<srv>\S+) ts=(?P<ts>\S+) age=(?P<age>\S+) calls=(?P<calls>\S+) rq\[f=(?P<rq_f>[^,]+),i=(?P<rq_i>[^,]*),an=(?P<rq_an>[^,]*),rx=(?P<rq_rx>[^,]*),wx=(?P<rq_wx>[^,]*),ax=(?P<rq_ax>[^\]]*)] rp\[f=(?P<rp_f>[^,]+),i=(?P<rp_I>[^,]*),an=(?P<rp_an>[^,]*),rx=(?P<rp_rx>[^,]*),wx=(?P<rp_wx>[^,]*),ax=(?P<rp_ax>[^\]]*)] .*exp=(?P<exp>\S*)`)},
+	))
+	Plugins["haproxy_pools"] = table.NewPlugin("haproxy_pools", PoolsColumns(), RegexGenerate(
+		"show pools",
+		&myRegexp{8, regexp.MustCompile(`  - Pool (?P<name>\w+) \((?P<size>\d+) bytes\) : (?P<allocated>\d+) allocated \((?P<allocated_size>\d+) bytes\), (?P<used>\d+) used, (?P<failures>\d+) failures, (?P<users>\d+) users (?P<shared>.*)`)},
+	))
+
+}
+
+func RegexGenerate(cmd string, re *myRegexp) table.GenerateFunc {
+	return func(ctx context.Context, queryContext table.QueryContext) ([]map[string]string, error) {
+
+		results := []map[string]string{}
+
+		addrList, err := ListAddresses(queryContext)
 		if err != nil {
-			log.Println("Haproxy Client RunCommand error show sess: ", err)
+			log.Println("ListAddresses return error: ", err)
 			return results, err
 		}
-		scanner := bufio.NewScanner(data)
-		for scanner.Scan() {
-			aline := scanner.Text()
-			if aline != "" {
-				m := SessionRE.FindStringSubmatchMap(aline)
-				m["addr"] = a
-
-				results = append(results, m)
+		for _, a := range addrList {
+			client := &haproxy.HAProxyClient{Addr: a}
+			data, err := client.RunCommand(cmd)
+			if err != nil {
+				log.Println("Haproxy Client RunCommand error show sess: ", err)
+				return results, err
 			}
+			scanner := bufio.NewScanner(data)
+			for scanner.Scan() {
+				aline := scanner.Text()
+				if aline != "" {
+					m := re.FindStringSubmatchMap(aline)
+					if re.count == len(m) {
+						m["addr"] = a
+
+						results = append(results, m)
+					}
+				}
+			}
+			return results, nil
 		}
-		return results, nil
+		return results, errors.New("addr is required in WHERE to identify which sock to speak with")
 	}
-	return results, errors.New("addr is required in WHERE to identify which sock to speak with")
 }
