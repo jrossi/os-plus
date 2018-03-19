@@ -32,3 +32,7 @@
 [[constraint]]
   branch = "master"
   name = "github.com/bcicen/go-haproxy"
+
+[[constraint]]
+  name = "github.com/hashicorp/consul"
+  version = "1.0.6"

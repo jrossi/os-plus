@@ -10,12 +10,16 @@ import (
 )
 
 type Options struct {
-	SocketPath string `long:"socketpath" short:"s" env:"SOCKETPATH" required:"truy" default:"$HOME/.osquery/shell.em" description:"Path to osproxy plugin socket"`
+	SocketPath string `long:"socketpath" short:"s" env:"SOCKETPATH" required:"true" default:"$HOME/.osquery/shell.em" description:"Path to osproxy plugin socket"`
 	Logging    struct {
 		Level string `long:"level" default:"warn" description:"Level of logging"`
 	} `namespace:"logging" group:"Logging Options"`
 	Tables struct {
 		Disabled []string `long:"enabled" env:"TABLES_DISABLED" default:"" description:"Tables to be disabled"`
+		Consul   struct {
+			Address string `long:"address" env:"CONSUL_ADDRESS" default:"127.0.0.1:8500" description:"Address consul is listening on"`
+			Token   string `long:"token" env:"CONSUL_TOKEN" description:"Token for accessing consul"`
+		} `namespace:"consul" group:"Consul Table Options"`
 	} `namespace:"tables" group:"Tables Options"`
 }
 
