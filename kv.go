@@ -4,11 +4,11 @@ import (
 	"bufio"
 	"context"
 	"errors"
-	"log"
 	"strings"
 
 	"github.com/bcicen/go-haproxy"
 	"github.com/kolide/osquery-go/plugin/table"
+	log "github.com/sirupsen/logrus"
 )
 
 func ActivityColumns() []table.ColumnDefinition {
